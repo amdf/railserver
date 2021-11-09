@@ -5,17 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 	"time"
-)
-
-const (
-	addrlocal = ":12321" //192.168.10.126
-	addrvps   = ":6801"
 )
 
 func main() {
 
-	addr := addrvps
+	addr := ":6801"
 	// Устанавливаем прослушивание порта
 
 	ln, err := net.Listen("tcp", addr)
@@ -31,7 +27,8 @@ func main() {
 		if err == nil {
 			num++
 			log.Println(num, "Connection opened")
-			go procText(num, conn)
+			//go procText(num, conn)
+			go procBin(num, conn)
 		}
 	}
 }
@@ -53,18 +50,34 @@ func procText(num int, conn net.Conn) {
 	log.Println(num, "Connection closed")
 }
 
-func procBinary(num int, conn net.Conn) {
+func procBin(num int, conn net.Conn) {
 	defer conn.Close()
 	buf := make([]byte, 4096)
 	var err error
 	for n := 0; err == nil; {
 		n, err = bufio.NewReader(conn).Read(buf)
 
-		log.Println(num, buf[:n])
-		//log.Println(num, string(buf[:n]))
+		v := strings.Split(string(buf[:n]), ";")
+		if len(v) < 10 {
+			log.Println("incomplete", len(v))
+		} else {
+			var sc SensorCoords
+			t := time.Now()
+			for _, str := range v {
+				if "" != str {
+					err2 := sc.FromString(t, str)
+					if nil == err2 {
+						log.Println(num, t.Format("2006-01-02 15:04:05.000"), sc.X, sc.Y, sc.Z)
+					} else {
+						log.Println(num, "convert error")
+					}
+					t = t.Add(time.Millisecond * 100)
+				}
+			}
+		}
 
-		// Отправить новую строку обратно клиенту
-		//conn.Write([]byte(newmessage + "\n"))
+		//log.Println(num, n, "bytes:", buf[:n])
+		//log.Println(num, string(buf[:n]))
 	}
 	log.Println(num, "Connection closed")
 }
