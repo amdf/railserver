@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"strings"
 	"time"
@@ -66,10 +67,12 @@ func procBin(num int, conn net.Conn) {
 			for _, str := range v {
 				if "" != str {
 					err2 := sc.FromString(t, str)
-					if nil == err2 {
-						log.Println(num, t.Format("2006-01-02 15:04:05.000"), sc.X, sc.Y, sc.Z)
-					} else {
-						log.Println(num, "convert error")
+					if math.Abs((math.Abs(sc.Z) - 9.8)) > 2. {
+						if nil == err2 {
+							fmt.Printf("%d %v   %-20.2f%-20.2f%-20.2f\n", num, t.Format("2006-01-02 15:04:05.000"), sc.X, sc.Y, sc.Z)
+						} else {
+							log.Println(num, "convert error")
+						}
 					}
 					t = t.Add(time.Millisecond * 100)
 				}

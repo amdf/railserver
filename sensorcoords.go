@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -10,9 +11,9 @@ import (
 //SensorCoords данные датчика.
 type SensorCoords struct {
 	Time time.Time
-	X    int
-	Y    int
-	Z    int
+	X    float64
+	Y    float64
+	Z    float64
 }
 
 //FromString из строки, приходящей с устройства.
@@ -30,14 +31,20 @@ func (sc *SensorCoords) FromString(t time.Time, str string) (err error) {
 		err = errors.New("split failed")
 		return
 	}
-	sc.X, err = strconv.Atoi(v[0])
+	sc.X, err = strconv.ParseFloat(v[0], 64)
 	if err != nil {
 		return
 	}
-	sc.Y, err = strconv.Atoi(v[1])
+	sc.Y, err = strconv.ParseFloat(v[1], 64)
 	if err != nil {
 		return
 	}
-	sc.Z, err = strconv.Atoi(v[2])
+	sc.Z, err = strconv.ParseFloat(v[2], 64)
+
+	rng := 2.
+	sc.X = (sc.X / math.MaxInt16) * rng * 9.80664999999998
+	sc.Y = (sc.Y / math.MaxInt16) * rng * 9.80664999999998
+	sc.Z = (sc.Z / math.MaxInt16) * rng * 9.80664999999998
+
 	return
 }
